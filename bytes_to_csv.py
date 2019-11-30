@@ -48,7 +48,11 @@ if __name__ == '__main__':
     for i in idxs:
         start_img_byte = 16 + i * N_COLS * N_ROWS
         start_label_byte = 8 + i
-        img = np.array([bytes_to_int([img_data[start_img_byte + j]]) for j in range(N_COLS * N_ROWS)]).reshape(N_COLS, N_ROWS)
+        img = [
+            [
+                bytes_to_int([img_data[start_img_byte + j * N_COLS + k]]) for k in range(N_COLS)
+            ] for j in range(N_ROWS)
+        ]
         label = bytes_to_int([labels_data[start_label_byte]])
         images.append(img)
         labels.append(label)
