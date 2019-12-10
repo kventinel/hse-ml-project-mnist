@@ -36,12 +36,12 @@ def hor_symmetry(img):
 
 def vert_mass_center(img):
     mat = np.repeat(np.arange(img.shape[1]).reshape(-1, 1), img.shape[0], axis=1)
-    return np.mean(mat * img) / MAX
+    return np.sum(mat * img) / np.sum(img)
 
 
 def hor_mass_center(img):
     mat = np.repeat(np.arange(img.shape[0]).reshape(1, -1), img.shape[1], axis=0)
-    return np.mean(mat * img) / MAX
+    return np.sum(mat * img) / np.sum(img)
 
 
 def vert_viola(img):
