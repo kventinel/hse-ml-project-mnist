@@ -1,0 +1,1011 @@
+\section*{K-means}
+
+    Let's firstly define functions for scaling the data and fitting KMeans
+clustering. First function returns us KMeans criterion with clustering
+labels based on 10 random intializations. We use sklearn implementation
+which optimexes inertia as the fuctional.
+
+    \begin{tcolorbox}[breakable, size=fbox, boxrule=1pt, pad at break*=1mm,colback=cellbackground, colframe=cellborder]
+\prompt{In}{incolor}{6}{\boxspacing}
+\begin{Verbatim}[commandchars=\\\{\}]
+\PY{k}{def} \PY{n+nf}{fit\PYZus{}kmeans}\PY{p}{(}\PY{n}{X}\PY{p}{,} \PY{n}{features}\PY{p}{,} \PY{n}{n\PYZus{}clusters}\PY{p}{,} \PY{n}{n\PYZus{}init}\PY{p}{)}\PY{p}{:}
+    \PY{n}{kmeans\PYZus{}criterion} \PY{o}{=} \PY{p}{[}\PY{p}{]}
+    \PY{n}{clustering\PYZus{}results} \PY{o}{=} \PY{p}{[}\PY{p}{]}
+    \PY{k}{for} \PY{n}{\PYZus{}} \PY{o+ow}{in} \PY{n+nb}{range}\PY{p}{(}\PY{n}{n\PYZus{}init}\PY{p}{)}\PY{p}{:}
+        \PY{n}{clusterer} \PY{o}{=} \PY{n}{KMeans}\PY{p}{(}\PY{n}{n\PYZus{}clusters}\PY{o}{=}\PY{n}{n\PYZus{}clusters}\PY{p}{,} \PY{n}{n\PYZus{}init}\PY{o}{=}\PY{l+m+mi}{1}\PY{p}{)}
+        \PY{n}{predicted\PYZus{}labels} \PY{o}{=} \PY{n}{clusterer}\PY{o}{.}\PY{n}{fit\PYZus{}predict}\PY{p}{(}\PY{n}{X}\PY{p}{[}\PY{n}{features}\PY{p}{]}\PY{p}{)}
+        \PY{n}{clustering\PYZus{}results}\PY{o}{.}\PY{n}{append}\PY{p}{(}\PY{n}{predicted\PYZus{}labels}\PY{p}{)}
+        \PY{n}{kmeans\PYZus{}criterion}\PY{o}{.}\PY{n}{append}\PY{p}{(}\PY{n}{clusterer}\PY{o}{.}\PY{n}{inertia\PYZus{}}\PY{p}{)}
+    \PY{k}{return} \PY{n}{kmeans\PYZus{}criterion}\PY{p}{,} \PY{n}{clustering\PYZus{}results}\PY{p}{[}\PY{n}{np}\PY{o}{.}\PY{n}{argmin}\PY{p}{(}\PY{n}{kmeans\PYZus{}criterion}\PY{p}{)}\PY{p}{]}
+\end{Verbatim}
+\end{tcolorbox}
+
+    \begin{tcolorbox}[breakable, size=fbox, boxrule=1pt, pad at break*=1mm,colback=cellbackground, colframe=cellborder]
+\prompt{In}{incolor}{7}{\boxspacing}
+\begin{Verbatim}[commandchars=\\\{\}]
+\PY{k}{def} \PY{n+nf}{scale\PYZus{}data}\PY{p}{(}\PY{n}{X}\PY{p}{)}\PY{p}{:}
+    \PY{n}{scaler} \PY{o}{=} \PY{n}{MinMaxScaler}\PY{p}{(}\PY{p}{)}
+    \PY{n}{X\PYZus{}scaled} \PY{o}{=} \PY{n}{pd}\PY{o}{.}\PY{n}{DataFrame}\PY{p}{(}
+        \PY{n}{scaler}\PY{o}{.}\PY{n}{fit\PYZus{}transform}\PY{p}{(}\PY{n}{X}\PY{p}{)}\PY{p}{,}
+        \PY{n}{columns} \PY{o}{=} \PY{n}{X}\PY{o}{.}\PY{n}{columns}
+    \PY{p}{)}
+    
+    \PY{k}{return} \PY{n}{X\PYZus{}scaled}
+    
+\end{Verbatim}
+\end{tcolorbox}
+
+    Now we could read the data and proceed to feature normalizing. We will
+normalize only continous features using MinMaxScaler. This scaler
+transform feature range to {[}0, 1{]} using its minimum and maximum
+value.
+
+    \begin{tcolorbox}[breakable, size=fbox, boxrule=1pt, pad at break*=1mm,colback=cellbackground, colframe=cellborder]
+\prompt{In}{incolor}{8}{\boxspacing}
+\begin{Verbatim}[commandchars=\\\{\}]
+\PY{n}{clustering\PYZus{}features} \PY{o}{=} \PY{p}{[}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{all\PYZus{}viola}\PY{l+s+s1}{\PYZsq{}}\PY{p}{,} \PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{count}\PY{l+s+s1}{\PYZsq{}}\PY{p}{,} \PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{vert\PYZus{}mass\PYZus{}center}\PY{l+s+s1}{\PYZsq{}}\PY{p}{,} \PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{vert\PYZus{}symmetry}\PY{l+s+s1}{\PYZsq{}}\PY{p}{,} \PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{hor\PYZus{}mass\PYZus{}center}\PY{l+s+s1}{\PYZsq{}}\PY{p}{]}
+\PY{n}{clustering\PYZus{}features\PYZus{}scale} \PY{o}{=} \PY{p}{[}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{all\PYZus{}viola}\PY{l+s+s1}{\PYZsq{}}\PY{p}{,} \PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{vert\PYZus{}mass\PYZus{}center}\PY{l+s+s1}{\PYZsq{}}\PY{p}{,} \PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{vert\PYZus{}symmetry}\PY{l+s+s1}{\PYZsq{}}\PY{p}{,} \PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{hor\PYZus{}mass\PYZus{}center}\PY{l+s+s1}{\PYZsq{}}\PY{p}{]}
+
+\PY{n}{train} \PY{o}{=} \PY{n}{pd}\PY{o}{.}\PY{n}{read\PYZus{}csv}\PY{p}{(}\PY{n}{constants}\PY{o}{.}\PY{n}{TRAIN}\PY{p}{,} 
+                    \PY{n}{usecols} \PY{o}{=} \PY{p}{[}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{all\PYZus{}viola}\PY{l+s+s1}{\PYZsq{}}\PY{p}{,} \PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{count}\PY{l+s+s1}{\PYZsq{}}\PY{p}{,} \PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{hor\PYZus{}mass\PYZus{}center}\PY{l+s+s1}{\PYZsq{}}\PY{p}{,} \PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{hor\PYZus{}symmetry}\PY{l+s+s1}{\PYZsq{}}\PY{p}{,}
+                               \PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{hor\PYZus{}viola}\PY{l+s+s1}{\PYZsq{}}\PY{p}{,} \PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{idx}\PY{l+s+s1}{\PYZsq{}}\PY{p}{,} \PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{label}\PY{l+s+s1}{\PYZsq{}}\PY{p}{,} \PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{mean}\PY{l+s+s1}{\PYZsq{}}\PY{p}{,} \PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{vert\PYZus{}mass\PYZus{}center}\PY{l+s+s1}{\PYZsq{}}\PY{p}{,}
+                                \PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{vert\PYZus{}symmetry}\PY{l+s+s1}{\PYZsq{}}\PY{p}{,} \PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{vert\PYZus{}viola}\PY{l+s+s1}{\PYZsq{}}\PY{p}{]}\PY{p}{)}
+
+\PY{n}{train\PYZus{}scaled} \PY{o}{=} \PY{n}{scale\PYZus{}data}\PY{p}{(}\PY{n}{train}\PY{p}{[}\PY{n}{clustering\PYZus{}features\PYZus{}scale}\PY{p}{]}\PY{p}{)}
+\PY{n}{train\PYZus{}scaled}\PY{p}{[}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{count}\PY{l+s+s1}{\PYZsq{}}\PY{p}{]} \PY{o}{=} \PY{n}{train}\PY{p}{[}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{count}\PY{l+s+s1}{\PYZsq{}}\PY{p}{]}
+\PY{n}{train\PYZus{}scaled}\PY{p}{[}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{label}\PY{l+s+s1}{\PYZsq{}}\PY{p}{]} \PY{o}{=} \PY{n}{train}\PY{p}{[}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{label}\PY{l+s+s1}{\PYZsq{}}\PY{p}{]}
+\end{Verbatim}
+\end{tcolorbox}
+
+    After we normalized the feature, we proceed to choosing the most basic
+features for clusterization. They are based only on general information
+about pixels and also their vertical axis. These are simple features
+that could tell us about different pixels on the images and the
+orientation of the object. Moreover, we tried to exclude the linear
+dependent feature in order to bring better generalization to the
+clustering.
+
+    \begin{tcolorbox}[breakable, size=fbox, boxrule=1pt, pad at break*=1mm,colback=cellbackground, colframe=cellborder]
+\prompt{In}{incolor}{9}{\boxspacing}
+\begin{Verbatim}[commandchars=\\\{\}]
+\PY{n}{sns}\PY{o}{.}\PY{n}{pairplot}\PY{p}{(}\PY{n}{train}\PY{p}{[}\PY{n}{clustering\PYZus{}features}\PY{p}{]}\PY{p}{)}
+\end{Verbatim}
+\end{tcolorbox}
+
+            \begin{tcolorbox}[breakable, size=fbox, boxrule=.5pt, pad at break*=1mm, opacityfill=0]
+\prompt{Out}{outcolor}{9}{\boxspacing}
+\begin{Verbatim}[commandchars=\\\{\}]
+<seaborn.axisgrid.PairGrid at 0x134ac4710>
+\end{Verbatim}
+\end{tcolorbox}
+        
+    \begin{center}
+    \adjustimage{max size={0.9\linewidth}{0.9\paperheight}}{other/output_7_1.png}
+    \end{center}
+    { \hspace*{\fill} \\}
+    
+    Now, after normalizing the data we could fit KMeans and anylize result.
+We will look at features means and comprare them to the grand mean (the
+mean of the all dataset):
+
+    \begin{tcolorbox}[breakable, size=fbox, boxrule=1pt, pad at break*=1mm,colback=cellbackground, colframe=cellborder]
+\prompt{In}{incolor}{10}{\boxspacing}
+\begin{Verbatim}[commandchars=\\\{\}]
+\PY{n}{kmeans\PYZus{}five\PYZus{}criterion}\PY{p}{,} \PY{n}{labels\PYZus{}five} \PY{o}{=} \PY{n}{fit\PYZus{}kmeans}\PY{p}{(}\PY{n}{train\PYZus{}scaled}\PY{p}{,} \PY{n}{clustering\PYZus{}features}\PY{p}{,} \PY{l+m+mi}{5}\PY{p}{,} \PY{l+m+mi}{10}\PY{p}{)}
+\PY{n}{kmeans\PYZus{}nine\PYZus{}criterion}\PY{p}{,} \PY{n}{labels\PYZus{}nine} \PY{o}{=} \PY{n}{fit\PYZus{}kmeans}\PY{p}{(}\PY{n}{train\PYZus{}scaled}\PY{p}{,} \PY{n}{clustering\PYZus{}features}\PY{p}{,} \PY{l+m+mi}{9}\PY{p}{,} \PY{l+m+mi}{10}\PY{p}{)}
+
+\PY{n}{data\PYZus{}mean} \PY{o}{=} \PY{n}{train}\PY{p}{[}\PY{n}{clustering\PYZus{}features} \PY{o}{+} \PY{p}{[}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{label}\PY{l+s+s1}{\PYZsq{}}\PY{p}{]}\PY{p}{]}\PY{o}{.}\PY{n}{mean}\PY{p}{(}\PY{p}{)}
+\PY{n}{data\PYZus{}mean}\PY{o}{.}\PY{n}{name} \PY{o}{=} \PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{data\PYZus{}mean}\PY{l+s+s1}{\PYZsq{}}
+\end{Verbatim}
+\end{tcolorbox}
+
+    \begin{tcolorbox}[breakable, size=fbox, boxrule=1pt, pad at break*=1mm,colback=cellbackground, colframe=cellborder]
+\prompt{In}{incolor}{11}{\boxspacing}
+\begin{Verbatim}[commandchars=\\\{\}]
+\PY{n}{train}\PY{p}{[}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{clusters\PYZus{}five}\PY{l+s+s1}{\PYZsq{}}\PY{p}{]} \PY{o}{=} \PY{n}{labels\PYZus{}five}
+\PY{n}{results\PYZus{}five\PYZus{}clusters} \PY{o}{=} \PY{n}{train}\PY{o}{.}\PY{n}{groupby}\PY{p}{(}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{clusters\PYZus{}five}\PY{l+s+s1}{\PYZsq{}}\PY{p}{)}\PY{p}{[}\PY{n}{clustering\PYZus{}features} \PY{o}{+} \PY{p}{[}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{label}\PY{l+s+s1}{\PYZsq{}}\PY{p}{]}\PY{p}{]}\PY{o}{.}\PY{n}{mean}\PY{p}{(}\PY{p}{)}
+\PY{n}{results\PYZus{}five\PYZus{}clusters} \PY{o}{=} \PY{n}{results\PYZus{}five\PYZus{}clusters}\PY{o}{.}\PY{n}{append}\PY{p}{(}\PY{n}{data\PYZus{}mean}\PY{p}{)}
+\PY{n}{results\PYZus{}five\PYZus{}clusters}
+\end{Verbatim}
+\end{tcolorbox}
+
+            \begin{tcolorbox}[breakable, size=fbox, boxrule=.5pt, pad at break*=1mm, opacityfill=0]
+\prompt{Out}{outcolor}{11}{\boxspacing}
+\begin{Verbatim}[commandchars=\\\{\}]
+               all\_viola       count  vert\_mass\_center  vert\_symmetry  \textbackslash{}
+clusters\_five
+0              -8.027731  191.709845         14.008225      -5.470339
+1              -2.530407  123.515050         14.001630      -2.464183
+2              -6.526573   82.371212         13.997653      -1.700854
+3             -11.112132  235.852941         13.961299      -7.241409
+4              -3.219222  156.629870         14.028761      -5.422144
+data\_mean      -4.914597  149.084000         14.007992      -4.179515
+
+               hor\_mass\_center     label
+clusters\_five
+0                    14.036303  3.968912
+1                    14.020967  5.394649
+2                    14.008330  2.628788
+3                    13.997987  3.117647
+4                    13.988845  5.032468
+data\_mean            14.010802  4.488000
+\end{Verbatim}
+\end{tcolorbox}
+        
+    But before looking at the statistics let's look at the difference
+between intializations:
+
+    \begin{tcolorbox}[breakable, size=fbox, boxrule=1pt, pad at break*=1mm,colback=cellbackground, colframe=cellborder]
+\prompt{In}{incolor}{12}{\boxspacing}
+\begin{Verbatim}[commandchars=\\\{\}]
+\PY{n}{pd}\PY{o}{.}\PY{n}{DataFrame}\PY{p}{(}\PY{n}{kmeans\PYZus{}five\PYZus{}criterion}\PY{p}{,} 
+             \PY{n}{index} \PY{o}{=} \PY{p}{[}\PY{l+s+s2}{\PYZdq{}}\PY{l+s+s2}{run \PYZsh{}}\PY{l+s+s2}{\PYZdq{}} \PY{o}{+} \PY{n+nb}{str}\PY{p}{(}\PY{n}{x}\PY{p}{)} \PY{k}{for} \PY{n}{x} \PY{o+ow}{in} \PY{n+nb}{range}\PY{p}{(}\PY{l+m+mi}{1}\PY{p}{,} \PY{l+m+mi}{11}\PY{p}{)}\PY{p}{]}\PY{p}{,} 
+             \PY{n}{columns} \PY{o}{=} \PY{p}{[}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{inertia}\PY{l+s+s1}{\PYZsq{}}\PY{p}{]}
+\PY{p}{)}
+\end{Verbatim}
+\end{tcolorbox}
+
+            \begin{tcolorbox}[breakable, size=fbox, boxrule=.5pt, pad at break*=1mm, opacityfill=0]
+\prompt{Out}{outcolor}{12}{\boxspacing}
+\begin{Verbatim}[commandchars=\\\{\}]
+               inertia
+run \#1   202252.260511
+run \#2   143905.693049
+run \#3   145129.696990
+run \#4   143696.083568
+run \#5   142912.145003
+run \#6   145129.696990
+run \#7   145129.696990
+run \#8   145129.696990
+run \#9   145129.696990
+run \#10  143725.213854
+\end{Verbatim}
+\end{tcolorbox}
+        
+    \begin{tcolorbox}[breakable, size=fbox, boxrule=1pt, pad at break*=1mm,colback=cellbackground, colframe=cellborder]
+\prompt{In}{incolor}{13}{\boxspacing}
+\begin{Verbatim}[commandchars=\\\{\}]
+\PY{n}{pd}\PY{o}{.}\PY{n}{DataFrame}\PY{p}{(}\PY{n}{kmeans\PYZus{}nine\PYZus{}criterion}\PY{p}{,} 
+             \PY{n}{index} \PY{o}{=} \PY{p}{[}\PY{l+s+s2}{\PYZdq{}}\PY{l+s+s2}{run \PYZsh{}}\PY{l+s+s2}{\PYZdq{}} \PY{o}{+} \PY{n+nb}{str}\PY{p}{(}\PY{n}{x}\PY{p}{)} \PY{k}{for} \PY{n}{x} \PY{o+ow}{in} \PY{n+nb}{range}\PY{p}{(}\PY{l+m+mi}{1}\PY{p}{,} \PY{l+m+mi}{11}\PY{p}{)}\PY{p}{]}\PY{p}{,} 
+             \PY{n}{columns} \PY{o}{=} \PY{p}{[}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{inertia}\PY{l+s+s1}{\PYZsq{}}\PY{p}{]}
+\PY{p}{)}
+\end{Verbatim}
+\end{tcolorbox}
+
+            \begin{tcolorbox}[breakable, size=fbox, boxrule=.5pt, pad at break*=1mm, opacityfill=0]
+\prompt{Out}{outcolor}{13}{\boxspacing}
+\begin{Verbatim}[commandchars=\\\{\}]
+              inertia
+run \#1   50980.675144
+run \#2   51068.938199
+run \#3   50280.957256
+run \#4   53876.890407
+run \#5   52484.961622
+run \#6   52516.126284
+run \#7   50213.154914
+run \#8   50749.273014
+run \#9   51096.792553
+run \#10  51423.927640
+\end{Verbatim}
+\end{tcolorbox}
+        
+    According to the inertia the best runs are \#10 and \#3 for five and
+nine clusters case respectively
+
+    \begin{tcolorbox}[breakable, size=fbox, boxrule=1pt, pad at break*=1mm,colback=cellbackground, colframe=cellborder]
+\prompt{In}{incolor}{14}{\boxspacing}
+\begin{Verbatim}[commandchars=\\\{\}]
+\PY{n}{rel\PYZus{}difference} \PY{o}{=} \PY{l+m+mi}{100} \PY{o}{*} \PY{p}{(}\PY{n}{results\PYZus{}five\PYZus{}clusters}\PY{o}{.}\PY{n}{iloc}\PY{p}{[}\PY{p}{:}\PY{o}{\PYZhy{}}\PY{l+m+mi}{1}\PY{p}{]} \PY{o}{\PYZhy{}} \PY{n}{results\PYZus{}five\PYZus{}clusters}\PY{o}{.}\PY{n}{loc}\PY{p}{[}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{data\PYZus{}mean}\PY{l+s+s1}{\PYZsq{}}\PY{p}{]}\PY{p}{)} \PYZbs{}
+                \PY{o}{/} \PY{n}{results\PYZus{}five\PYZus{}clusters}\PY{o}{.}\PY{n}{loc}\PY{p}{[}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{data\PYZus{}mean}\PY{l+s+s1}{\PYZsq{}}\PY{p}{]}
+\PY{n}{rel\PYZus{}difference}\PY{o}{.}\PY{n}{columns} \PY{o}{=} \PY{p}{[}\PY{n}{x} \PY{o}{+} \PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{\PYZus{}diff, }\PY{l+s+s1}{\PYZpc{}}\PY{l+s+s1}{\PYZsq{}} \PY{k}{for} \PY{n}{x} \PY{o+ow}{in} \PY{n}{rel\PYZus{}difference}\PY{o}{.}\PY{n}{columns}\PY{p}{]}
+
+
+\PY{n}{rel\PYZus{}difference} 
+\end{Verbatim}
+\end{tcolorbox}
+
+            \begin{tcolorbox}[breakable, size=fbox, boxrule=.5pt, pad at break*=1mm, opacityfill=0]
+\prompt{Out}{outcolor}{14}{\boxspacing}
+\begin{Verbatim}[commandchars=\\\{\}]
+               all\_viola\_diff, \%  count\_diff, \%  vert\_mass\_center\_diff, \%  \textbackslash{}
+clusters\_five
+0                      63.344642      28.591830                  0.001665
+1                     -48.512411     -17.150700                 -0.045415
+2                      32.799764     -44.748456                 -0.073803
+3                     126.104653      58.201377                 -0.333330
+4                     -34.496722       5.061489                  0.148267
+
+               vert\_symmetry\_diff, \%  hor\_mass\_center\_diff, \%  label\_diff, \%
+clusters\_five
+0                          30.884541                 0.182008     -11.566134
+1                         -41.041409                 0.072545      20.201623
+2                         -59.304989                -0.017646     -41.426295
+3                          73.259542                -0.091471     -30.533711
+4                          29.731411                -0.156718      12.131630
+\end{Verbatim}
+\end{tcolorbox}
+        
+    \begin{tcolorbox}[breakable, size=fbox, boxrule=1pt, pad at break*=1mm,colback=cellbackground, colframe=cellborder]
+\prompt{In}{incolor}{15}{\boxspacing}
+\begin{Verbatim}[commandchars=\\\{\}]
+\PY{n}{pd}\PY{o}{.}\PY{n}{crosstab}\PY{p}{(}\PY{n}{train}\PY{p}{[}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{clusters\PYZus{}five}\PY{l+s+s1}{\PYZsq{}}\PY{p}{]}\PY{p}{,} \PY{n}{train}\PY{p}{[}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{label}\PY{l+s+s1}{\PYZsq{}}\PY{p}{]}\PY{p}{)}
+\end{Verbatim}
+\end{tcolorbox}
+
+            \begin{tcolorbox}[breakable, size=fbox, boxrule=.5pt, pad at break*=1mm, opacityfill=0]
+\prompt{Out}{outcolor}{15}{\boxspacing}
+\begin{Verbatim}[commandchars=\\\{\}]
+label           0   1   2   3   4   5   6   7   8   9
+clusters\_five
+0              53   0  25  24   9  10  13   5  41  13
+1               7  20  23  16  45  38  31  55  18  46
+2               0  88   2   5   3   5   6  20   0   3
+3              28   0   9   8   0   3   3   0  16   1
+4              23   2  40  30  38  37  37  26  38  37
+\end{Verbatim}
+\end{tcolorbox}
+        
+    \begin{tcolorbox}[breakable, size=fbox, boxrule=1pt, pad at break*=1mm,colback=cellbackground, colframe=cellborder]
+\prompt{In}{incolor}{16}{\boxspacing}
+\begin{Verbatim}[commandchars=\\\{\}]
+\PY{n}{train}\PY{p}{[}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{clusters\PYZus{}nine}\PY{l+s+s1}{\PYZsq{}}\PY{p}{]} \PY{o}{=} \PY{n}{labels\PYZus{}nine}
+\PY{n}{results\PYZus{}nine\PYZus{}clusters} \PY{o}{=} \PY{n}{train}\PY{o}{.}\PY{n}{groupby}\PY{p}{(}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{clusters\PYZus{}nine}\PY{l+s+s1}{\PYZsq{}}\PY{p}{)}\PY{p}{[}\PY{n}{clustering\PYZus{}features} \PY{o}{+} \PY{p}{[}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{label}\PY{l+s+s1}{\PYZsq{}}\PY{p}{]}\PY{p}{]}\PY{o}{.}\PY{n}{mean}\PY{p}{(}\PY{p}{)}
+\PY{n}{results\PYZus{}nine\PYZus{}clusters} \PY{o}{=} \PY{n}{results\PYZus{}nine\PYZus{}clusters}\PY{o}{.}\PY{n}{append}\PY{p}{(}\PY{n}{data\PYZus{}mean}\PY{p}{)}
+\PY{n}{results\PYZus{}nine\PYZus{}clusters}
+\end{Verbatim}
+\end{tcolorbox}
+
+            \begin{tcolorbox}[breakable, size=fbox, boxrule=.5pt, pad at break*=1mm, opacityfill=0]
+\prompt{Out}{outcolor}{16}{\boxspacing}
+\begin{Verbatim}[commandchars=\\\{\}]
+               all\_viola       count  vert\_mass\_center  vert\_symmetry  \textbackslash{}
+clusters\_nine
+0              -2.874304  150.898990         14.036684      -4.666048
+1              -7.343899  194.550000         14.014254      -5.087096
+2              -9.262894   75.923913         13.993732      -1.615600
+3              -2.845576  106.726027         13.993887      -1.386847
+4             -11.906353  249.419355         13.981966      -6.900428
+5              -5.692571  170.487654         14.003582      -6.940271
+6              -1.815851  130.761658         14.008533      -3.161600
+7              11.522959  351.000000         13.589157      -4.002551
+8              -9.935911  216.736842         13.986490      -5.993734
+data\_mean      -4.914597  149.084000         14.007992      -4.179515
+
+               hor\_mass\_center     label
+clusters\_nine
+0                    13.990923  5.186869
+1                    14.035304  3.966667
+2                    14.029493  1.891304
+3                    14.033635  5.157534
+4                    14.016093  3.451613
+5                    13.992744  4.598765
+6                    13.998676  5.352332
+7                    14.487500  0.000000
+8                    14.020768  3.035088
+data\_mean            14.010802  4.488000
+\end{Verbatim}
+\end{tcolorbox}
+        
+    \begin{tcolorbox}[breakable, size=fbox, boxrule=1pt, pad at break*=1mm,colback=cellbackground, colframe=cellborder]
+\prompt{In}{incolor}{17}{\boxspacing}
+\begin{Verbatim}[commandchars=\\\{\}]
+\PY{n}{abs\PYZus{}difference} \PY{o}{=} \PY{n}{results\PYZus{}nine\PYZus{}clusters}\PY{o}{.}\PY{n}{iloc}\PY{p}{[}\PY{p}{:}\PY{o}{\PYZhy{}}\PY{l+m+mi}{1}\PY{p}{]} \PY{o}{\PYZhy{}} \PY{n}{results\PYZus{}nine\PYZus{}clusters}\PY{o}{.}\PY{n}{loc}\PY{p}{[}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{data\PYZus{}mean}\PY{l+s+s1}{\PYZsq{}}\PY{p}{]}
+\PY{n}{abs\PYZus{}difference}\PY{o}{.}\PY{n}{columns} \PY{o}{=} \PY{p}{[}\PY{n}{x} \PY{o}{+} \PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{\PYZus{}diff}\PY{l+s+s1}{\PYZsq{}} \PY{k}{for} \PY{n}{x} \PY{o+ow}{in} \PY{n}{abs\PYZus{}difference}\PY{o}{.}\PY{n}{columns}\PY{p}{]}
+
+\PY{n}{abs\PYZus{}difference}
+\end{Verbatim}
+\end{tcolorbox}
+
+            \begin{tcolorbox}[breakable, size=fbox, boxrule=.5pt, pad at break*=1mm, opacityfill=0]
+\prompt{Out}{outcolor}{17}{\boxspacing}
+\begin{Verbatim}[commandchars=\\\{\}]
+               all\_viola\_diff  count\_diff  vert\_mass\_center\_diff  \textbackslash{}
+clusters\_nine
+0                    2.040293    1.814990               0.028692
+1                   -2.429302   45.466000               0.006263
+2                   -4.348297  -73.160087              -0.014259
+3                    2.069021  -42.357973              -0.014105
+4                   -6.991756  100.335355              -0.026025
+5                   -0.777974   21.403654              -0.004410
+6                    3.098746  -18.322342               0.000541
+7                   16.437556  201.916000              -0.418834
+8                   -5.021314   67.652842              -0.021502
+
+               vert\_symmetry\_diff  hor\_mass\_center\_diff  label\_diff
+clusters\_nine
+0                       -0.486533             -0.019879    0.698869
+1                       -0.907581              0.024502   -0.521333
+2                        2.563915              0.018691   -2.596696
+3                        2.792669              0.022832    0.669534
+4                       -2.720913              0.005290   -1.036387
+5                       -2.760756             -0.018059    0.110765
+6                        1.017915             -0.012126    0.864332
+7                        0.176964              0.476698   -4.488000
+8                       -1.814219              0.009965   -1.452912
+\end{Verbatim}
+\end{tcolorbox}
+        
+    \begin{tcolorbox}[breakable, size=fbox, boxrule=1pt, pad at break*=1mm,colback=cellbackground, colframe=cellborder]
+\prompt{In}{incolor}{18}{\boxspacing}
+\begin{Verbatim}[commandchars=\\\{\}]
+\PY{n}{rel\PYZus{}difference} \PY{o}{=} \PY{l+m+mi}{100} \PY{o}{*} \PY{p}{(}\PY{n}{results\PYZus{}nine\PYZus{}clusters}\PY{o}{.}\PY{n}{iloc}\PY{p}{[}\PY{p}{:}\PY{o}{\PYZhy{}}\PY{l+m+mi}{1}\PY{p}{]} \PY{o}{\PYZhy{}} \PY{n}{results\PYZus{}nine\PYZus{}clusters}\PY{o}{.}\PY{n}{loc}\PY{p}{[}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{data\PYZus{}mean}\PY{l+s+s1}{\PYZsq{}}\PY{p}{]}\PY{p}{)} \PYZbs{}
+                \PY{o}{/} \PY{n}{results\PYZus{}nine\PYZus{}clusters}\PY{o}{.}\PY{n}{loc}\PY{p}{[}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{data\PYZus{}mean}\PY{l+s+s1}{\PYZsq{}}\PY{p}{]}
+\PY{n}{rel\PYZus{}difference}\PY{o}{.}\PY{n}{columns} \PY{o}{=} \PY{p}{[}\PY{n}{x} \PY{o}{+} \PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{\PYZus{}diff, }\PY{l+s+s1}{\PYZpc{}}\PY{l+s+s1}{\PYZsq{}} \PY{k}{for} \PY{n}{x} \PY{o+ow}{in} \PY{n}{rel\PYZus{}difference}\PY{o}{.}\PY{n}{columns}\PY{p}{]}
+
+
+\PY{n}{rel\PYZus{}difference} 
+\end{Verbatim}
+\end{tcolorbox}
+
+            \begin{tcolorbox}[breakable, size=fbox, boxrule=.5pt, pad at break*=1mm, opacityfill=0]
+\prompt{Out}{outcolor}{18}{\boxspacing}
+\begin{Verbatim}[commandchars=\\\{\}]
+               all\_viola\_diff, \%  count\_diff, \%  vert\_mass\_center\_diff, \%  \textbackslash{}
+clusters\_nine
+0                     -41.514954       1.217428                  0.204824
+1                      49.430338      30.496901                  0.044707
+2                      88.477181     -49.073064                 -0.101795
+3                     -42.099506     -28.412152                 -0.100694
+4                     142.265093      67.301223                 -0.185789
+5                      15.829856      14.356775                 -0.031484
+6                     -63.051890     -12.289945                  0.003862
+7                    -334.463972     135.437740                 -2.989967
+8                     102.171436      45.379009                 -0.153495
+
+               vert\_symmetry\_diff, \%  hor\_mass\_center\_diff, \%  label\_diff, \%
+clusters\_nine
+0                          11.640894                -0.141887      15.571940
+1                          21.714977                 0.174879     -11.616162
+2                         -61.344799                 0.133404     -57.858638
+3                         -66.818006                 0.162963      14.918321
+4                          65.101152                 0.037758     -23.092404
+5                          66.054458                -0.128893       2.468035
+6                         -24.354868                -0.086549      19.258726
+7                          -4.234086                 3.402361    -100.000000
+8                          43.407402                 0.071125     -32.373268
+\end{Verbatim}
+\end{tcolorbox}
+        
+    \begin{tcolorbox}[breakable, size=fbox, boxrule=1pt, pad at break*=1mm,colback=cellbackground, colframe=cellborder]
+\prompt{In}{incolor}{19}{\boxspacing}
+\begin{Verbatim}[commandchars=\\\{\}]
+\PY{n}{pd}\PY{o}{.}\PY{n}{crosstab}\PY{p}{(}\PY{n}{train}\PY{p}{[}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{clusters\PYZus{}nine}\PY{l+s+s1}{\PYZsq{}}\PY{p}{]}\PY{p}{,} \PY{n}{train}\PY{p}{[}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{label}\PY{l+s+s1}{\PYZsq{}}\PY{p}{]}\PY{p}{)}
+\end{Verbatim}
+\end{tcolorbox}
+
+            \begin{tcolorbox}[breakable, size=fbox, boxrule=.5pt, pad at break*=1mm, opacityfill=0]
+\prompt{Out}{outcolor}{19}{\boxspacing}
+\begin{Verbatim}[commandchars=\\\{\}]
+label           0   1   2   3   4   5   6   7   8   9
+clusters\_nine
+0              11   2  21  20  30  24  24  18  19  29
+1              35   0  14  16   1   8   9   2  27   8
+2               0  76   0   2   0   2   2  10   0   0
+3               0  26   6   8  18  13  13  39   4  19
+4              14   0   2   2   0   1   2   0  10   0
+5              20   0  29  16  16  14  17  10  27  13
+6               7   6  19  11  30  28  22  26  14  30
+7               1   0   0   0   0   0   0   0   0   0
+8              23   0   8   8   0   3   1   1  12   1
+\end{Verbatim}
+\end{tcolorbox}
+        
+    Interpretation:
+
+9 clusters case:
+
+\begin{itemize}
+\item
+  Cluster five has the biggest difference with grand mean in feature
+  ``count''. It means that in average case there are more black pixels
+  in cluster five than in the whole sample.
+\item
+  Cluster zero has a lot of similar statistics compared to the data
+  mean. For example, mean\_diff and vert\_mass\_center\_diff are 1.4 and
+  0.12 percents respectively. It shows us that the distribution of
+  different digits in cluster zero is almost the same as in the whole
+  sample.
+\item
+  Cluster three has a big difference in all\_viola feature because there
+  most popular digit in this clusters are zero and which have one of the
+  biggest viola mean in the whole dataset.
+\end{itemize}
+
+5 clusters case:
+
+This case is more interesting for analysis because we see a big relative
+difference in almost every claster when comparing to the grand mean of
+every feature. Let's see:
+
+\begin{itemize}
+\item
+  Cluster two has the smallest mean of the feature named count. It could
+  be easily explained by analyzing the most popular digit in the
+  cluster. It's a digit 1, which almost doesn't have white pixels. That
+  is why this cluster has the smallest mean of feature count.
+\item
+  Like in the 9 clusters case there is a cluster which has some features
+  that does not differ from grand mean. For example, mean and
+  vert\_mass\_center\_diff
+\end{itemize}
+
+Overall, the clusterization is very noisy for both cases. We could see
+that by looking ath distribution of digits between the clusters. There
+are always some clusters that contain each type of digits and they also
+have very small relative difference in their mean. This clusterization
+technique will be much better if we add raw features from the data or
+more features created based on raw data.
+
+
+\subsection*{Bootstrap}
+
+    Firstly, let us define fucntion which computes both pivotal and
+non-pivotal version of the bootstrap. It takes the following arguments:
+
+\begin{itemize}
+\item
+  X - our data
+\item
+  feature - feature for which we computing bootstrap mean
+\item
+  cluster\_label - the name of the cluster feature where we store
+  clusterinf results
+\item
+  first\_cluster - the first cluster number for bootstrap computation
+\item
+  first\_cluster - the second cluster number for bootstrap computation
+\item
+  pivotal - booalean variable which tells us if use pivotal version or
+  not
+\item
+  :return: dictionary with three keys, each one corresponds to first
+  cluster mean, second cluster mean or grand mean. The value is a list
+  which contains left and right bounf for CI
+\end{itemize}
+
+    \begin{tcolorbox}[breakable, size=fbox, boxrule=1pt, pad at break*=1mm,colback=cellbackground, colframe=cellborder]
+\prompt{In}{incolor}{20}{\boxspacing}
+\begin{Verbatim}[commandchars=\\\{\}]
+\PY{k}{def} \PY{n+nf}{bootstrap}\PY{p}{(}\PY{n}{X}\PY{p}{,} \PY{n}{feature}\PY{p}{,} \PY{n}{cluster\PYZus{}label}\PY{p}{,} \PY{n}{first\PYZus{}cluster}\PY{o}{=}\PY{k+kc}{None}\PY{p}{,} 
+              \PY{n}{second\PYZus{}cluster}\PY{o}{=}\PY{k+kc}{None}\PY{p}{,} \PY{n}{pivotal}\PY{o}{=}\PY{k+kc}{True}\PY{p}{)}\PY{p}{:}
+    \PY{n}{first\PYZus{}sample\PYZus{}means} \PY{o}{=} \PY{p}{[}\PY{p}{]}
+    \PY{n}{second\PYZus{}sample\PYZus{}means} \PY{o}{=} \PY{p}{[}\PY{p}{]}
+    \PY{n}{grand\PYZus{}sample\PYZus{}means} \PY{o}{=} \PY{p}{[}\PY{p}{]}
+    \PY{k}{for} \PY{n}{\PYZus{}} \PY{o+ow}{in} \PY{n+nb}{range}\PY{p}{(}\PY{l+m+mi}{1000}\PY{p}{)}\PY{p}{:} \PY{c+c1}{\PYZsh{} bootstraping}
+        \PY{k}{if} \PY{n}{first\PYZus{}cluster} \PY{o+ow}{is} \PY{o+ow}{not} \PY{k+kc}{None}\PY{p}{:}
+            \PY{n}{first\PYZus{}sample\PYZus{}means}\PY{o}{.}\PY{n}{append}\PY{p}{(}
+                \PY{n}{X}\PY{p}{[}\PY{n}{X}\PY{p}{[}\PY{n}{cluster\PYZus{}label}\PY{p}{]} \PY{o}{==} \PY{n}{first\PYZus{}cluster}\PY{p}{]}\PY{p}{[}\PY{n}{feature}\PY{p}{]} \PYZbs{}
+                                                    \PY{o}{.}\PY{n}{sample}\PY{p}{(}\PY{l+m+mi}{100}\PY{p}{,} \PY{n}{replace}\PY{o}{=}\PY{k+kc}{True}\PY{p}{)} \PYZbs{}
+                                                    \PY{o}{.}\PY{n}{mean}\PY{p}{(}\PY{p}{)}
+            \PY{p}{)}
+        \PY{k}{if} \PY{n}{second\PYZus{}cluster} \PY{o+ow}{is} \PY{o+ow}{not} \PY{k+kc}{None}\PY{p}{:}
+            \PY{n}{second\PYZus{}sample\PYZus{}means}\PY{o}{.}\PY{n}{append}\PY{p}{(}
+                \PY{n}{X}\PY{p}{[}\PY{n}{X}\PY{p}{[}\PY{n}{cluster\PYZus{}label}\PY{p}{]} \PY{o}{==} \PY{n}{second\PYZus{}cluster}\PY{p}{]}\PY{p}{[}\PY{n}{feature}\PY{p}{]}
+                                                    \PY{o}{.}\PY{n}{sample}\PY{p}{(}\PY{l+m+mi}{100}\PY{p}{,} \PY{n}{replace}\PY{o}{=}\PY{k+kc}{True}\PY{p}{)} \PYZbs{}
+                                                    \PY{o}{.}\PY{n}{mean}\PY{p}{(}\PY{p}{)}
+            \PY{p}{)}
+            
+        \PY{n}{grand\PYZus{}sample\PYZus{}means}\PY{o}{.}\PY{n}{append}\PY{p}{(}
+            \PY{n}{X}\PY{p}{[}\PY{n}{feature}\PY{p}{]}\PY{o}{.}\PY{n}{sample}\PY{p}{(}\PY{l+m+mi}{500}\PY{p}{)}\PY{o}{.}\PY{n}{mean}\PY{p}{(}\PY{p}{)}
+        \PY{p}{)}
+            
+    \PY{k}{if} \PY{n}{pivotal}\PY{p}{:} 
+        \PY{k}{if} \PY{n}{first\PYZus{}cluster} \PY{o+ow}{is} \PY{o+ow}{not} \PY{k+kc}{None}\PY{p}{:}
+            \PY{n}{first\PYZus{}mean} \PY{o}{=} \PY{n}{np}\PY{o}{.}\PY{n}{mean}\PY{p}{(}\PY{n}{first\PYZus{}sample\PYZus{}means}\PY{p}{)}
+            \PY{n}{first\PYZus{}std} \PY{o}{=} \PY{n}{np}\PY{o}{.}\PY{n}{std}\PY{p}{(}\PY{n}{first\PYZus{}sample\PYZus{}means}\PY{p}{)}
+            
+        \PY{k}{if} \PY{n}{second\PYZus{}cluster} \PY{o+ow}{is} \PY{o+ow}{not} \PY{k+kc}{None}\PY{p}{:}
+            \PY{n}{second\PYZus{}mean} \PY{o}{=} \PY{n}{np}\PY{o}{.}\PY{n}{mean}\PY{p}{(}\PY{n}{second\PYZus{}sample\PYZus{}means}\PY{p}{)}
+            \PY{n}{second\PYZus{}std} \PY{o}{=} \PY{n}{np}\PY{o}{.}\PY{n}{std}\PY{p}{(}\PY{n}{second\PYZus{}sample\PYZus{}means}\PY{p}{)}
+        
+        \PY{n}{grand\PYZus{}std} \PY{o}{=} \PY{n}{np}\PY{o}{.}\PY{n}{std}\PY{p}{(}\PY{n}{grand\PYZus{}sample\PYZus{}means}\PY{p}{)}
+        \PY{n}{grand\PYZus{}mean} \PY{o}{=} \PY{n}{np}\PY{o}{.}\PY{n}{mean}\PY{p}{(}\PY{n}{grand\PYZus{}sample\PYZus{}means}\PY{p}{)}
+        
+        \PY{n+nb}{print}\PY{p}{(}\PY{n}{first\PYZus{}mean}\PY{p}{)}
+        \PY{k}{return} \PY{p}{\PYZob{}}
+            \PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{first\PYZus{}CI}\PY{l+s+s1}{\PYZsq{}} \PY{p}{:} \PY{p}{[}\PY{n}{first\PYZus{}mean} \PY{o}{\PYZhy{}} \PY{l+m+mf}{1.96} \PY{o}{*} \PY{n}{first\PYZus{}std}\PY{p}{,} \PY{n}{first\PYZus{}mean} \PY{o}{+} \PY{l+m+mf}{1.96} \PY{o}{*} \PY{n}{first\PYZus{}std}\PY{p}{]}\PY{p}{,} 
+            \PY{c+c1}{\PYZsh{} 1.96 is quantile of normal distribution}
+            \PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{second\PYZus{}CI}\PY{l+s+s1}{\PYZsq{}} \PY{p}{:} \PY{p}{[}\PY{n}{second\PYZus{}mean} \PY{o}{\PYZhy{}} \PY{l+m+mf}{1.96} \PY{o}{*} \PY{n}{second\PYZus{}std}\PY{p}{,} \PY{n}{second\PYZus{}mean} \PY{o}{+} \PY{l+m+mf}{1.96} \PY{o}{*} \PY{n}{second\PYZus{}std}\PY{p}{]}\PY{p}{,}
+            \PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{grand\PYZus{}CI}\PY{l+s+s1}{\PYZsq{}} \PY{p}{:} \PY{p}{[}\PY{n}{grand\PYZus{}mean} \PY{o}{\PYZhy{}} \PY{l+m+mf}{1.96} \PY{o}{*} \PY{n}{grand\PYZus{}std}\PY{p}{,} \PY{n}{grand\PYZus{}mean} \PY{o}{+} \PY{l+m+mf}{1.96} \PY{o}{*} \PY{n}{grand\PYZus{}std}\PY{p}{]}
+        \PY{p}{\PYZcb{}}
+    \PY{k}{else}\PY{p}{:}
+        \PY{k}{if} \PY{n}{first\PYZus{}cluster} \PY{o+ow}{is} \PY{o+ow}{not} \PY{k+kc}{None}\PY{p}{:}
+            \PY{n}{first\PYZus{}lb} \PY{o}{=} \PY{n}{np}\PY{o}{.}\PY{n}{percentile}\PY{p}{(}\PY{n}{first\PYZus{}sample\PYZus{}means}\PY{p}{,} \PY{l+m+mf}{2.5}\PY{p}{)}
+            \PY{n}{first\PYZus{}rb} \PY{o}{=} \PY{n}{np}\PY{o}{.}\PY{n}{percentile}\PY{p}{(}\PY{n}{first\PYZus{}sample\PYZus{}means}\PY{p}{,} \PY{l+m+mf}{97.5}\PY{p}{)}
+            
+        \PY{k}{if} \PY{n}{second\PYZus{}cluster} \PY{o+ow}{is} \PY{o+ow}{not} \PY{k+kc}{None}\PY{p}{:}
+            \PY{n}{second\PYZus{}lb} \PY{o}{=} \PY{n}{np}\PY{o}{.}\PY{n}{percentile}\PY{p}{(}\PY{n}{second\PYZus{}sample\PYZus{}means}\PY{p}{,} \PY{l+m+mf}{2.5}\PY{p}{)}
+            \PY{n}{second\PYZus{}rb} \PY{o}{=} \PY{n}{np}\PY{o}{.}\PY{n}{percentile}\PY{p}{(}\PY{n}{second\PYZus{}sample\PYZus{}means}\PY{p}{,} \PY{l+m+mf}{97.5}\PY{p}{)}
+        
+        \PY{n}{grand\PYZus{}lb} \PY{o}{=} \PY{n}{np}\PY{o}{.}\PY{n}{percentile}\PY{p}{(}\PY{n}{grand\PYZus{}sample\PYZus{}means}\PY{p}{,} \PY{l+m+mf}{2.5}\PY{p}{)}
+        \PY{n}{grand\PYZus{}rb} \PY{o}{=} \PY{n}{np}\PY{o}{.}\PY{n}{percentile}\PY{p}{(}\PY{n}{grand\PYZus{}sample\PYZus{}means}\PY{p}{,} \PY{l+m+mf}{97.5}\PY{p}{)}
+        
+        \PY{k}{return} \PY{p}{\PYZob{}}
+            \PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{first\PYZus{}CI}\PY{l+s+s1}{\PYZsq{}} \PY{p}{:} \PY{p}{[}\PY{n}{first\PYZus{}lb}\PY{p}{,} \PY{n}{first\PYZus{}rb}\PY{p}{]}\PY{p}{,}
+            \PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{second\PYZus{}CI}\PY{l+s+s1}{\PYZsq{}} \PY{p}{:} \PY{p}{[}\PY{n}{second\PYZus{}lb}\PY{p}{,} \PY{n}{second\PYZus{}rb}\PY{p}{]}\PY{p}{,}
+            \PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{grand\PYZus{}CI}\PY{l+s+s1}{\PYZsq{}} \PY{p}{:} \PY{p}{[}\PY{n}{grand\PYZus{}lb}\PY{p}{,} \PY{n}{grand\PYZus{}rb}\PY{p}{]}
+        \PY{p}{\PYZcb{}}
+\end{Verbatim}
+\end{tcolorbox}
+
+    Pivotal version:
+
+    \begin{tcolorbox}[breakable, size=fbox, boxrule=1pt, pad at break*=1mm,colback=cellbackground, colframe=cellborder]
+\prompt{In}{incolor}{21}{\boxspacing}
+\begin{Verbatim}[commandchars=\\\{\}]
+\PY{n}{bootstrap}\PY{p}{(}\PY{n}{train}\PY{p}{,} \PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{count}\PY{l+s+s1}{\PYZsq{}}\PY{p}{,} \PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{clusters\PYZus{}five}\PY{l+s+s1}{\PYZsq{}}\PY{p}{,} \PY{l+m+mi}{0}\PY{p}{,} \PY{l+m+mi}{3}\PY{p}{)}
+\end{Verbatim}
+\end{tcolorbox}
+
+    \begin{Verbatim}[commandchars=\\\{\}]
+191.64603999999997
+    \end{Verbatim}
+
+            \begin{tcolorbox}[breakable, size=fbox, boxrule=.5pt, pad at break*=1mm, opacityfill=0]
+\prompt{Out}{outcolor}{21}{\boxspacing}
+\begin{Verbatim}[commandchars=\\\{\}]
+\{'first\_CI': [189.56506920613344, 193.7270107938665],
+ 'second\_CI': [231.78550413444978, 240.08575586555023],
+ 'grand\_CI': [146.39047234839848, 151.7739476516016]\}
+\end{Verbatim}
+\end{tcolorbox}
+        
+    Non-pivotal version:
+
+    \begin{tcolorbox}[breakable, size=fbox, boxrule=1pt, pad at break*=1mm,colback=cellbackground, colframe=cellborder]
+\prompt{In}{incolor}{22}{\boxspacing}
+\begin{Verbatim}[commandchars=\\\{\}]
+\PY{n}{bootstrap}\PY{p}{(}\PY{n}{train}\PY{p}{,} \PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{count}\PY{l+s+s1}{\PYZsq{}}\PY{p}{,} \PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{clusters\PYZus{}five}\PY{l+s+s1}{\PYZsq{}}\PY{p}{,} \PY{l+m+mi}{0}\PY{p}{,} \PY{l+m+mi}{3}\PY{p}{,} \PY{k+kc}{False}\PY{p}{)}
+\end{Verbatim}
+\end{tcolorbox}
+
+            \begin{tcolorbox}[breakable, size=fbox, boxrule=.5pt, pad at break*=1mm, opacityfill=0]
+\prompt{Out}{outcolor}{22}{\boxspacing}
+\begin{Verbatim}[commandchars=\\\{\}]
+\{'first\_CI': [189.59925, 193.88025],
+ 'second\_CI': [231.93975, 240.45125],
+ 'grand\_CI': [146.32350000000002, 151.62405]\}
+\end{Verbatim}
+\end{tcolorbox}
+        
+    Conclusion:
+
+\begin{itemize}
+\item
+  We could see that pivotal and non-pivotal bootstrap has almost no
+  difference in results and speed. It means we could use both of the
+  methods for our calculation
+\item
+  If we compare two clusters we will see that first one has a lot of
+  ones and that's why CI for it is much different. It is caused by the
+  number of ones that appeared in the cluster zero.
+\item
+  Bootstrap estimate for the second CI and grand CI are almost the same.
+  If we look at the distribution of classes in cluster in\textbar{} the
+  previous task we will notice that the distributions are very similar.
+\end{itemize}
+
+\subsection*{Contingency Table}
+
+    Let us take the following features for the analysis:
+
+\begin{itemize}
+\item
+  count
+\item
+  vert\_symmetry
+\item
+  hor\_mass\_center
+\end{itemize}
+
+Now we will look at their histogramms and choose the cutoffs:
+
+    \begin{tcolorbox}[breakable, size=fbox, boxrule=1pt, pad at break*=1mm,colback=cellbackground, colframe=cellborder]
+\prompt{In}{incolor}{23}{\boxspacing}
+\begin{Verbatim}[commandchars=\\\{\}]
+\PY{n}{plt}\PY{o}{.}\PY{n}{figure}\PY{p}{(}\PY{p}{)}
+\PY{n}{f}\PY{p}{,} \PY{p}{(}\PY{n}{ax1}\PY{p}{,} \PY{n}{ax2}\PY{p}{,} \PY{n}{ax3}\PY{p}{)} \PY{o}{=} \PY{n}{plt}\PY{o}{.}\PY{n}{subplots}\PY{p}{(}\PY{l+m+mi}{1}\PY{p}{,} \PY{l+m+mi}{3}\PY{p}{,} \PY{n}{sharey}\PY{o}{=}\PY{k+kc}{True}\PY{p}{,} \PY{n}{figsize}\PY{o}{=}\PY{p}{(}\PY{l+m+mi}{20}\PY{p}{,} \PY{l+m+mi}{10}\PY{p}{)}\PY{p}{)}
+\PY{n}{ax1}\PY{o}{.}\PY{n}{hist}\PY{p}{(}\PY{n}{train}\PY{p}{[}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{count}\PY{l+s+s1}{\PYZsq{}}\PY{p}{]}\PY{p}{,} \PY{n}{bins} \PY{o}{=} \PY{l+m+mi}{30}\PY{p}{)}
+\PY{n}{ax1}\PY{o}{.}\PY{n}{set\PYZus{}title}\PY{p}{(}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{Count feature hist}\PY{l+s+s1}{\PYZsq{}}\PY{p}{)}
+\PY{n}{ax2}\PY{o}{.}\PY{n}{hist}\PY{p}{(}\PY{n}{train}\PY{p}{[}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{vert\PYZus{}symmetry}\PY{l+s+s1}{\PYZsq{}}\PY{p}{]}\PY{p}{,} \PY{n}{bins} \PY{o}{=} \PY{l+m+mi}{30}\PY{p}{)}
+\PY{n}{ax2}\PY{o}{.}\PY{n}{set\PYZus{}title}\PY{p}{(}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{Vert symmetry feature hist}\PY{l+s+s1}{\PYZsq{}}\PY{p}{)}
+\PY{n}{ax3}\PY{o}{.}\PY{n}{hist}\PY{p}{(}\PY{n}{train}\PY{p}{[}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{hor\PYZus{}mass\PYZus{}center}\PY{l+s+s1}{\PYZsq{}}\PY{p}{]}\PY{p}{,} \PY{n}{bins} \PY{o}{=} \PY{l+m+mi}{30}\PY{p}{)}
+\PY{n}{ax3}\PY{o}{.}\PY{n}{set\PYZus{}title}\PY{p}{(}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{Hor mass center feature hist}\PY{l+s+s1}{\PYZsq{}}\PY{p}{)}
+\end{Verbatim}
+\end{tcolorbox}
+
+            \begin{tcolorbox}[breakable, size=fbox, boxrule=.5pt, pad at break*=1mm, opacityfill=0]
+\prompt{Out}{outcolor}{23}{\boxspacing}
+\begin{Verbatim}[commandchars=\\\{\}]
+Text(0.5, 1.0, 'Hor mass center feature hist')
+\end{Verbatim}
+\end{tcolorbox}
+        
+    
+    \begin{verbatim}
+<Figure size 432x288 with 0 Axes>
+    \end{verbatim}
+
+    
+    \begin{center}
+    \adjustimage{max size={0.9\linewidth}{0.9\paperheight}}{other/output_32_2.png}
+    \end{center}
+    { \hspace*{\fill} \\}
+    
+    Boundaries for the first feature:
+
+\begin{itemize}
+\item
+  0-100
+\item
+  100-175
+\item
+  175-300
+\item
+  300-400
+\end{itemize}
+
+Boundaries for the second feature:
+
+\begin{itemize}
+\item
+  -35-(-10)
+\item
+  -10-0
+\item
+  0-20
+\item
+  20-40
+\end{itemize}
+
+Boundaries for the third feature:
+
+\begin{itemize}
+\item
+  0-13.7
+\item
+  13.7-14.1
+\item
+  14.2-\ldots{}
+\end{itemize}
+
+Now we will use method from pandas library for categorizing the feature.
+
+    \begin{tcolorbox}[breakable, size=fbox, boxrule=1pt, pad at break*=1mm,colback=cellbackground, colframe=cellborder]
+\prompt{In}{incolor}{24}{\boxspacing}
+\begin{Verbatim}[commandchars=\\\{\}]
+\PY{n}{train}\PY{p}{[}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{count\PYZus{}cat}\PY{l+s+s1}{\PYZsq{}}\PY{p}{]} \PY{o}{=} \PY{n}{pd}\PY{o}{.}\PY{n}{cut}\PY{p}{(}\PY{n}{train}\PY{p}{[}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{count}\PY{l+s+s1}{\PYZsq{}}\PY{p}{]}\PY{p}{,}
+                     \PY{n}{bins}\PY{o}{=}\PY{p}{[}\PY{l+m+mi}{0}\PY{p}{,} \PY{l+m+mi}{100}\PY{p}{,} \PY{l+m+mi}{175}\PY{p}{,} \PY{l+m+mi}{300}\PY{p}{,} \PY{l+m+mi}{400}\PY{p}{]}\PY{p}{,}
+                     \PY{n}{labels}\PY{o}{=}\PY{p}{[}\PY{l+s+s2}{\PYZdq{}}\PY{l+s+s2}{0\PYZhy{}100}\PY{l+s+s2}{\PYZdq{}}\PY{p}{,} \PY{l+s+s2}{\PYZdq{}}\PY{l+s+s2}{100\PYZhy{}175}\PY{l+s+s2}{\PYZdq{}}\PY{p}{,} \PY{l+s+s2}{\PYZdq{}}\PY{l+s+s2}{175\PYZhy{}300}\PY{l+s+s2}{\PYZdq{}}\PY{p}{,} \PY{l+s+s2}{\PYZdq{}}\PY{l+s+s2}{300\PYZhy{}400}\PY{l+s+s2}{\PYZdq{}}\PY{p}{]}\PY{p}{)}
+\end{Verbatim}
+\end{tcolorbox}
+
+    \begin{tcolorbox}[breakable, size=fbox, boxrule=1pt, pad at break*=1mm,colback=cellbackground, colframe=cellborder]
+\prompt{In}{incolor}{25}{\boxspacing}
+\begin{Verbatim}[commandchars=\\\{\}]
+\PY{n}{train}\PY{p}{[}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{vert\PYZus{}symmetry\PYZus{}cat}\PY{l+s+s1}{\PYZsq{}}\PY{p}{]} \PY{o}{=} \PY{n}{pd}\PY{o}{.}\PY{n}{cut}\PY{p}{(}\PY{n}{train}\PY{p}{[}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{vert\PYZus{}symmetry}\PY{l+s+s1}{\PYZsq{}}\PY{p}{]}\PY{p}{,}
+                     \PY{n}{bins}\PY{o}{=}\PY{p}{[}\PY{o}{\PYZhy{}}\PY{l+m+mi}{35}\PY{p}{,} \PY{o}{\PYZhy{}}\PY{l+m+mi}{10}\PY{p}{,} \PY{l+m+mi}{0}\PY{p}{,} \PY{l+m+mi}{20}\PY{p}{,} \PY{l+m+mi}{40}\PY{p}{]}\PY{p}{,}
+                     \PY{n}{labels}\PY{o}{=}\PY{p}{[}\PY{l+s+s2}{\PYZdq{}}\PY{l+s+s2}{\PYZhy{}35\PYZhy{}(\PYZhy{}10)}\PY{l+s+s2}{\PYZdq{}}\PY{p}{,} \PY{l+s+s2}{\PYZdq{}}\PY{l+s+s2}{\PYZhy{}10\PYZhy{}0}\PY{l+s+s2}{\PYZdq{}}\PY{p}{,} \PY{l+s+s2}{\PYZdq{}}\PY{l+s+s2}{0\PYZhy{}20}\PY{l+s+s2}{\PYZdq{}}\PY{p}{,} \PY{l+s+s2}{\PYZdq{}}\PY{l+s+s2}{20\PYZhy{}40}\PY{l+s+s2}{\PYZdq{}}\PY{p}{]}\PY{p}{)}
+\end{Verbatim}
+\end{tcolorbox}
+
+    \begin{tcolorbox}[breakable, size=fbox, boxrule=1pt, pad at break*=1mm,colback=cellbackground, colframe=cellborder]
+\prompt{In}{incolor}{26}{\boxspacing}
+\begin{Verbatim}[commandchars=\\\{\}]
+\PY{n}{train}\PY{p}{[}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{hor\PYZus{}mass\PYZus{}center\PYZus{}cat}\PY{l+s+s1}{\PYZsq{}}\PY{p}{]} \PY{o}{=} \PY{n}{pd}\PY{o}{.}\PY{n}{cut}\PY{p}{(}\PY{n}{train}\PY{p}{[}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{hor\PYZus{}mass\PYZus{}center}\PY{l+s+s1}{\PYZsq{}}\PY{p}{]}\PY{p}{,}
+                     \PY{n}{bins}\PY{o}{=}\PY{p}{[}\PY{l+m+mi}{0}\PY{p}{,} \PY{l+m+mf}{13.7}\PY{p}{,} \PY{l+m+mf}{14.1}\PY{p}{,} \PY{l+m+mf}{14.5}\PY{p}{]}\PY{p}{,}
+                     \PY{n}{labels}\PY{o}{=}\PY{p}{[}\PY{l+s+s2}{\PYZdq{}}\PY{l+s+s2}{0\PYZhy{}13.7}\PY{l+s+s2}{\PYZdq{}}\PY{p}{,} \PY{l+s+s2}{\PYZdq{}}\PY{l+s+s2}{13.7\PYZhy{}14.1}\PY{l+s+s2}{\PYZdq{}}\PY{p}{,} \PY{l+s+s2}{\PYZdq{}}\PY{l+s+s2}{14.2\PYZhy{}...}\PY{l+s+s2}{\PYZdq{}}\PY{p}{]}\PY{p}{)}
+\end{Verbatim}
+\end{tcolorbox}
+
+    Now we will create conditional frequency table, based on our categorized
+features:
+
+    \begin{tcolorbox}[breakable, size=fbox, boxrule=1pt, pad at break*=1mm,colback=cellbackground, colframe=cellborder]
+\prompt{In}{incolor}{27}{\boxspacing}
+\begin{Verbatim}[commandchars=\\\{\}]
+\PY{n}{pd}\PY{o}{.}\PY{n}{crosstab}\PY{p}{(}\PY{n}{train}\PY{p}{[}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{label}\PY{l+s+s1}{\PYZsq{}}\PY{p}{]}\PY{p}{,} \PY{n}{train}\PY{p}{[}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{count\PYZus{}cat}\PY{l+s+s1}{\PYZsq{}}\PY{p}{]}\PY{p}{,} 
+            \PY{n}{margins}\PY{o}{=}\PY{k+kc}{True}\PY{p}{,} \PY{n}{margins\PYZus{}name}\PY{o}{=}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{Total}\PY{l+s+s1}{\PYZsq{}}\PY{p}{)}
+\end{Verbatim}
+\end{tcolorbox}
+
+            \begin{tcolorbox}[breakable, size=fbox, boxrule=.5pt, pad at break*=1mm, opacityfill=0]
+\prompt{Out}{outcolor}{27}{\boxspacing}
+\begin{Verbatim}[commandchars=\\\{\}]
+count\_cat  0-100  100-175  175-300  300-400  Total
+label
+0              0       33       77        1    111
+1             88       22        0        0    110
+2              1       64       34        0     99
+3              4       48       31        0     83
+4              2       84        9        0     95
+5              4       77       12        0     93
+6              5       69       16        0     90
+7             19       82        5        0    106
+8              0       56       57        0    113
+9              3       84       13        0    100
+Total        126      619      254        1   1000
+\end{Verbatim}
+\end{tcolorbox}
+        
+    \begin{tcolorbox}[breakable, size=fbox, boxrule=1pt, pad at break*=1mm,colback=cellbackground, colframe=cellborder]
+\prompt{In}{incolor}{28}{\boxspacing}
+\begin{Verbatim}[commandchars=\\\{\}]
+\PY{n}{pd}\PY{o}{.}\PY{n}{crosstab}\PY{p}{(}\PY{n}{train}\PY{p}{[}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{label}\PY{l+s+s1}{\PYZsq{}}\PY{p}{]}\PY{p}{,} \PY{n}{train}\PY{p}{[}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{vert\PYZus{}symmetry\PYZus{}cat}\PY{l+s+s1}{\PYZsq{}}\PY{p}{]}\PY{p}{,} 
+            \PY{n}{margins}\PY{o}{=}\PY{k+kc}{True}\PY{p}{,} \PY{n}{margins\PYZus{}name}\PY{o}{=}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{Total}\PY{l+s+s1}{\PYZsq{}}\PY{p}{)}
+\end{Verbatim}
+\end{tcolorbox}
+
+            \begin{tcolorbox}[breakable, size=fbox, boxrule=.5pt, pad at break*=1mm, opacityfill=0]
+\prompt{Out}{outcolor}{28}{\boxspacing}
+\begin{Verbatim}[commandchars=\\\{\}]
+vert\_symmetry\_cat  -35-(-10)  -10-0  0-20  20-40  Total
+label
+0                          8     88    15      0    111
+1                          1    104     5      0    110
+2                         68     27     4      0     99
+3                          4     53    26      0     83
+4                         32     52    11      0     95
+5                          8     44    41      0     93
+6                         66     23     1      0     90
+7                          2     16    87      1    106
+8                          7     70    36      0    113
+9                          2     57    41      0    100
+Total                    198    534   267      1   1000
+\end{Verbatim}
+\end{tcolorbox}
+        
+    \begin{tcolorbox}[breakable, size=fbox, boxrule=1pt, pad at break*=1mm,colback=cellbackground, colframe=cellborder]
+\prompt{In}{incolor}{29}{\boxspacing}
+\begin{Verbatim}[commandchars=\\\{\}]
+\PY{n}{pd}\PY{o}{.}\PY{n}{crosstab}\PY{p}{(}\PY{n}{train}\PY{p}{[}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{label}\PY{l+s+s1}{\PYZsq{}}\PY{p}{]}\PY{p}{,} \PY{n}{train}\PY{p}{[}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{hor\PYZus{}mass\PYZus{}center\PYZus{}cat}\PY{l+s+s1}{\PYZsq{}}\PY{p}{]}\PY{p}{,} 
+            \PY{n}{margins}\PY{o}{=}\PY{k+kc}{True}\PY{p}{,} \PY{n}{margins\PYZus{}name}\PY{o}{=}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{Total}\PY{l+s+s1}{\PYZsq{}}\PY{p}{)}
+\end{Verbatim}
+\end{tcolorbox}
+
+            \begin{tcolorbox}[breakable, size=fbox, boxrule=.5pt, pad at break*=1mm, opacityfill=0]
+\prompt{Out}{outcolor}{29}{\boxspacing}
+\begin{Verbatim}[commandchars=\\\{\}]
+hor\_mass\_center\_cat  0-13.7  13.7-14.1  14.2-{\ldots}  Total
+label
+0                        20         46        45    111
+1                        25         36        49    110
+2                        21         44        34     99
+3                        13         24        46     83
+4                        15         34        46     95
+5                        20         43        30     93
+6                        14         37        39     90
+7                        22         37        47    106
+8                        20         46        47    113
+9                        20         31        49    100
+Total                   190        378       432   1000
+\end{Verbatim}
+\end{tcolorbox}
+        
+    From this table we could see the following:
+
+\begin{itemize}
+\item
+  The most frequent result if there less than 100 pixels is number 1,
+  because we need only few pixels to draw one.
+\item
+  If there are more than 300 pixels it means that this an outlier for
+  the dataset because there is only one such sample
+\item
+  When talking about vertical simmetry we could notice that the in the
+  range 0-20 the most frequent digit is seven. This is normal because
+  this digit has more pixel in the upper part.
+\item
+  This is also true for the ones. But for most of them simmetry is near
+  zero beacause of its form :)
+\item
+  Hor mass center feature has distribution form closed to the Uniform
+  that is what we nearly see in the frequency table
+\end{itemize}
+
+Now, for calculating quetlet table we define a function that takes the
+following arguments:
+
+\begin{itemize}
+\item
+  X - data
+\item
+  first\_feature - first feature for calculating Quételet index
+\item
+  second\_feature - second feature for calculating Quételet index
+\item
+  :return: dict with table and summary Quetelet index
+\end{itemize}
+
+This function iterates through all possible values of the both features
+and then calculates the index by deviding the probabilities. Also, it
+calculates chi square using the same probs.
+
+    \begin{tcolorbox}[breakable, size=fbox, boxrule=1pt, pad at break*=1mm,colback=cellbackground, colframe=cellborder]
+\prompt{In}{incolor}{30}{\boxspacing}
+\begin{Verbatim}[commandchars=\\\{\}]
+\PY{k}{def} \PY{n+nf}{build\PYZus{}quetlet\PYZus{}table}\PY{p}{(}\PY{n}{X}\PY{p}{,} \PY{n}{first\PYZus{}feature}\PY{p}{,} \PY{n}{second\PYZus{}feature}\PY{p}{)}\PY{p}{:}
+    \PY{n}{quetlet\PYZus{}table} \PY{o}{=} \PY{p}{\PYZob{}}\PY{p}{\PYZcb{}}
+    \PY{n}{chi\PYZus{}square} \PY{o}{=} \PY{l+m+mi}{0}
+    \PY{k}{for} \PY{n}{k} \PY{o+ow}{in} \PY{n}{X}\PY{p}{[}\PY{n}{first\PYZus{}feature}\PY{p}{]}\PY{o}{.}\PY{n}{unique}\PY{p}{(}\PY{p}{)}\PY{p}{:}
+        \PY{n}{quetlet\PYZus{}index} \PY{o}{=} \PY{n+nb}{dict}\PY{p}{(}\PY{p}{)}
+        \PY{k}{for} \PY{n}{l} \PY{o+ow}{in} \PY{n}{X}\PY{p}{[}\PY{n}{second\PYZus{}feature}\PY{p}{]}\PY{o}{.}\PY{n}{unique}\PY{p}{(}\PY{p}{)}\PY{p}{:}
+            \PY{n}{first\PYZus{}count} \PY{o}{=} \PY{p}{(}\PY{n}{X}\PY{p}{[}\PY{n}{first\PYZus{}feature}\PY{p}{]} \PY{o}{==} \PY{n}{k}\PY{p}{)}
+            \PY{n}{second\PYZus{}count} \PY{o}{=} \PY{p}{(}\PY{n}{X}\PY{p}{[}\PY{n}{second\PYZus{}feature}\PY{p}{]} \PY{o}{==} \PY{n}{l}\PY{p}{)}
+            \PY{n}{p\PYZus{}hg} \PY{o}{=} \PY{p}{(}\PY{n}{first\PYZus{}count} \PY{o}{\PYZam{}} \PY{n}{second\PYZus{}count}\PY{p}{)}\PY{o}{.}\PY{n}{mean}\PY{p}{(}\PY{p}{)}
+            \PY{n}{p\PYZus{}h} \PY{o}{=} \PY{n}{first\PYZus{}count}\PY{o}{.}\PY{n}{mean}\PY{p}{(}\PY{p}{)}
+            \PY{n}{p\PYZus{}g} \PY{o}{=} \PY{n}{second\PYZus{}count}\PY{o}{.}\PY{n}{mean}\PY{p}{(}\PY{p}{)}
+            \PY{n}{quetlet\PYZus{}index}\PY{p}{[}\PY{n}{l}\PY{p}{]} \PY{o}{=} \PY{n}{p\PYZus{}hg} \PY{o}{/} \PY{p}{(}\PY{n}{p\PYZus{}h} \PY{o}{*} \PY{n}{p\PYZus{}g}\PY{p}{)} \PY{o}{\PYZhy{}} \PY{l+m+mi}{1}
+            \PY{n}{chi\PYZus{}square} \PY{o}{+}\PY{o}{=} \PY{p}{(}\PY{n}{p\PYZus{}hg} \PY{o}{\PYZhy{}} \PY{n}{p\PYZus{}h} \PY{o}{*} \PY{n}{p\PYZus{}g}\PY{p}{)}\PY{o}{*}\PY{o}{*}\PY{l+m+mi}{2} \PY{o}{/} \PY{p}{(}\PY{n}{p\PYZus{}h} \PY{o}{*} \PY{n}{p\PYZus{}g} \PY{o}{+} \PY{l+m+mf}{1e\PYZhy{}10}\PY{p}{)}
+        \PY{n}{quetlet\PYZus{}table}\PY{p}{[}\PY{n}{k}\PY{p}{]} \PY{o}{=} \PY{n}{quetlet\PYZus{}index}
+    \PY{k}{return} \PY{n}{quetlet\PYZus{}table}\PY{p}{,} \PY{n}{chi\PYZus{}square}
+\end{Verbatim}
+\end{tcolorbox}
+
+    \begin{tcolorbox}[breakable, size=fbox, boxrule=1pt, pad at break*=1mm,colback=cellbackground, colframe=cellborder]
+\prompt{In}{incolor}{31}{\boxspacing}
+\begin{Verbatim}[commandchars=\\\{\}]
+\PY{n}{table\PYZus{}count\PYZus{}hor}\PY{p}{,} \PY{n}{chi\PYZus{}count\PYZus{}hor} \PY{o}{=} \PY{n}{build\PYZus{}quetlet\PYZus{}table}\PY{p}{(}\PY{n}{train}\PY{p}{,} \PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{count\PYZus{}cat}\PY{l+s+s1}{\PYZsq{}}\PY{p}{,} \PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{hor\PYZus{}mass\PYZus{}center\PYZus{}cat}\PY{l+s+s1}{\PYZsq{}}\PY{p}{)}
+\end{Verbatim}
+\end{tcolorbox}
+
+    \begin{tcolorbox}[breakable, size=fbox, boxrule=1pt, pad at break*=1mm,colback=cellbackground, colframe=cellborder]
+\prompt{In}{incolor}{32}{\boxspacing}
+\begin{Verbatim}[commandchars=\\\{\}]
+\PY{n}{chi\PYZus{}count\PYZus{}hor}
+\end{Verbatim}
+\end{tcolorbox}
+
+            \begin{tcolorbox}[breakable, size=fbox, boxrule=.5pt, pad at break*=1mm, opacityfill=0]
+\prompt{Out}{outcolor}{32}{\boxspacing}
+\begin{Verbatim}[commandchars=\\\{\}]
+0.006041453360232884
+\end{Verbatim}
+\end{tcolorbox}
+        
+    \begin{tcolorbox}[breakable, size=fbox, boxrule=1pt, pad at break*=1mm,colback=cellbackground, colframe=cellborder]
+\prompt{In}{incolor}{33}{\boxspacing}
+\begin{Verbatim}[commandchars=\\\{\}]
+\PY{n}{table\PYZus{}count\PYZus{}vert}\PY{p}{,} \PY{n}{chi\PYZus{}count\PYZus{}vert} \PY{o}{=}  \PY{n}{build\PYZus{}quetlet\PYZus{}table}\PY{p}{(}\PY{n}{train}\PY{p}{,} \PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{count\PYZus{}cat}\PY{l+s+s1}{\PYZsq{}}\PY{p}{,} \PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{vert\PYZus{}symmetry\PYZus{}cat}\PY{l+s+s1}{\PYZsq{}}\PY{p}{)}
+\end{Verbatim}
+\end{tcolorbox}
+
+    \begin{tcolorbox}[breakable, size=fbox, boxrule=1pt, pad at break*=1mm,colback=cellbackground, colframe=cellborder]
+\prompt{In}{incolor}{34}{\boxspacing}
+\begin{Verbatim}[commandchars=\\\{\}]
+\PY{n}{chi\PYZus{}count\PYZus{}vert}
+\end{Verbatim}
+\end{tcolorbox}
+
+            \begin{tcolorbox}[breakable, size=fbox, boxrule=.5pt, pad at break*=1mm, opacityfill=0]
+\prompt{Out}{outcolor}{34}{\boxspacing}
+\begin{Verbatim}[commandchars=\\\{\}]
+0.06065758855161415
+\end{Verbatim}
+\end{tcolorbox}
+        
+    \begin{tcolorbox}[breakable, size=fbox, boxrule=1pt, pad at break*=1mm,colback=cellbackground, colframe=cellborder]
+\prompt{In}{incolor}{35}{\boxspacing}
+\begin{Verbatim}[commandchars=\\\{\}]
+\PY{n}{pd}\PY{o}{.}\PY{n}{DataFrame}\PY{p}{(}\PY{n}{table\PYZus{}count\PYZus{}vert}\PY{p}{)}
+\end{Verbatim}
+\end{tcolorbox}
+
+            \begin{tcolorbox}[breakable, size=fbox, boxrule=.5pt, pad at break*=1mm, opacityfill=0]
+\prompt{Out}{outcolor}{35}{\boxspacing}
+\begin{Verbatim}[commandchars=\\\{\}]
+            100-175   175-300     0-100   300-400
+0-20       0.173815 -0.233242 -0.375780 -1.000000
+-10-0     -0.116613  0.024802  0.515962  0.872659
+-35-(-10)  0.077006  0.252684 -0.879750 -1.000000
+20-40      0.615509 -1.000000 -1.000000 -1.000000
+\end{Verbatim}
+\end{tcolorbox}
+        
+    \begin{tcolorbox}[breakable, size=fbox, boxrule=1pt, pad at break*=1mm,colback=cellbackground, colframe=cellborder]
+\prompt{In}{incolor}{36}{\boxspacing}
+\begin{Verbatim}[commandchars=\\\{\}]
+\PY{n}{pd}\PY{o}{.}\PY{n}{DataFrame}\PY{p}{(}\PY{n}{table\PYZus{}count\PYZus{}hor}\PY{p}{)}
+\end{Verbatim}
+\end{tcolorbox}
+
+            \begin{tcolorbox}[breakable, size=fbox, boxrule=.5pt, pad at break*=1mm, opacityfill=0]
+\prompt{Out}{outcolor}{36}{\boxspacing}
+\begin{Verbatim}[commandchars=\\\{\}]
+            100-175   175-300     0-100   300-400
+14.2-{\ldots}  -0.031443  0.057160  0.028807  1.314815
+13.7-14.1  0.064184 -0.083448 -0.139162 -1.000000
+0-13.7    -0.056203  0.036055  0.211362 -1.000000
+\end{Verbatim}
+\end{tcolorbox}
+        
+    Conclusions:
+
+\begin{itemize}
+\item
+  From both summary Quetelet index we could see that this features are
+  most likely to be independent.
+\item
+  We see that value 0-100 is 51\% more likey to appear when
+  vert\_symmetry has value -10-0
+\item
+  Also we see that value 300-400 is 87\% more likey to appear when
+  vert\_symmetry has value -10-0
+\end{itemize}
+
+    Let's calculate the number of observations that would suffice to see the
+features as associated. Remember that if the hypothesis of independence
+is true, then:
+
+\(NX^2 \sim \chi^2((K - 1)(L-1))\), where \(K, L\) are numbers of
+possible different values for the features.
+
+In this case, we have 2 degrees of freedom:
+
+    \begin{tcolorbox}[breakable, size=fbox, boxrule=1pt, pad at break*=1mm,colback=cellbackground, colframe=cellborder]
+\prompt{In}{incolor}{40}{\boxspacing}
+\begin{Verbatim}[commandchars=\\\{\}]
+\PY{n+nb}{print}\PY{p}{(}\PY{n}{chi2}\PY{p}{(}\PY{n}{df}\PY{o}{=}\PY{l+m+mi}{2}\PY{p}{)}\PY{o}{.}\PY{n}{ppf}\PY{p}{(}\PY{l+m+mf}{0.95}\PY{p}{)}\PY{p}{)}
+\PY{n+nb}{print}\PY{p}{(}\PY{n}{chi2}\PY{p}{(}\PY{n}{df}\PY{o}{=}\PY{l+m+mi}{2}\PY{p}{)}\PY{o}{.}\PY{n}{ppf}\PY{p}{(}\PY{l+m+mf}{0.99}\PY{p}{)}\PY{p}{)}
+\end{Verbatim}
+\end{tcolorbox}
+
+    \begin{Verbatim}[commandchars=\\\{\}]
+5.991464547107979
+9.21034037197618
+    \end{Verbatim}
+
+    If the features are independent, there is only \(5\%\) chance that
+\(NX^2\) will be greater than \(5.99\), and \(1\%\) chance that \(NX^2\)
+will be greater than \(9.21\). We want to find such \(N\) that \(NX^2\)
+will exceed specified values, so we will calculate \(5.99\) and
+\(\frac{9.21}{X^2}\)
+
+    \begin{tcolorbox}[breakable, size=fbox, boxrule=1pt, pad at break*=1mm,colback=cellbackground, colframe=cellborder]
+\prompt{In}{incolor}{41}{\boxspacing}
+\begin{Verbatim}[commandchars=\\\{\}]
+\PY{k}{def} \PY{n+nf}{chi\PYZus{}square}\PY{p}{(}\PY{n}{dataframe}\PY{p}{,} \PY{n}{ver\PYZus{}feature}\PY{p}{,} \PY{n}{hor\PYZus{}feature}\PY{p}{)}\PY{p}{:}
+    \PY{n}{ver\PYZus{}column} \PY{o}{=} \PY{n}{dataframe}\PY{p}{[}\PY{n}{ver\PYZus{}feature}\PY{p}{]}
+    \PY{n}{hor\PYZus{}column} \PY{o}{=} \PY{n}{dataframe}\PY{p}{[}\PY{n}{hor\PYZus{}feature}\PY{p}{]}
+    \PY{n}{result} \PY{o}{=} \PY{l+m+mi}{0}
+    \PY{k}{for} \PY{n}{ver\PYZus{}value} \PY{o+ow}{in} \PY{n+nb}{sorted}\PY{p}{(}\PY{n}{ver\PYZus{}column}\PY{o}{.}\PY{n}{unique}\PY{p}{(}\PY{p}{)}\PY{p}{)}\PY{p}{:}
+        \PY{k}{for} \PY{n}{hor\PYZus{}value} \PY{o+ow}{in} \PY{n+nb}{sorted}\PY{p}{(}\PY{n}{hor\PYZus{}column}\PY{o}{.}\PY{n}{unique}\PY{p}{(}\PY{p}{)}\PY{p}{)}\PY{p}{:}
+            \PY{n}{p\PYZus{}vk} \PY{o}{=} \PY{p}{(}\PY{p}{(}\PY{n}{ver\PYZus{}column} \PY{o}{==} \PY{n}{ver\PYZus{}value}\PY{p}{)} \PY{o}{\PYZam{}}
+                    \PY{p}{(}\PY{n}{hor\PYZus{}column} \PY{o}{==} \PY{n}{hor\PYZus{}value}\PY{p}{)}\PY{p}{)}\PY{o}{.}\PY{n}{mean}\PY{p}{(}\PY{p}{)}
+            \PY{n}{p\PYZus{}k} \PY{o}{=} \PY{p}{(}\PY{n}{ver\PYZus{}column} \PY{o}{==} \PY{n}{ver\PYZus{}value}\PY{p}{)}\PY{o}{.}\PY{n}{mean}\PY{p}{(}\PY{p}{)}
+            \PY{n}{p\PYZus{}v} \PY{o}{=} \PY{p}{(}\PY{n}{hor\PYZus{}column} \PY{o}{==} \PY{n}{hor\PYZus{}value}\PY{p}{)}\PY{o}{.}\PY{n}{mean}\PY{p}{(}\PY{p}{)}
+            \PY{n}{result} \PY{o}{+}\PY{o}{=} \PY{p}{(}\PY{n}{p\PYZus{}vk} \PY{o}{\PYZhy{}} \PY{n}{p\PYZus{}k} \PY{o}{*} \PY{n}{p\PYZus{}v}\PY{p}{)}\PY{o}{*}\PY{o}{*}\PY{l+m+mi}{2} \PY{o}{/} \PY{p}{(}\PY{n}{p\PYZus{}k} \PY{o}{*} \PY{n}{p\PYZus{}v}\PY{p}{)}
+    \PY{n}{max\PYZus{}result} \PY{o}{=} \PY{n+nb}{min}\PY{p}{(}\PY{n+nb}{len}\PY{p}{(}\PY{n}{ver\PYZus{}column}\PY{o}{.}\PY{n}{unique}\PY{p}{(}\PY{p}{)}\PY{p}{)}\PY{p}{,} \PY{n+nb}{len}\PY{p}{(}\PY{n}{hor\PYZus{}column}\PY{o}{.}\PY{n}{unique}\PY{p}{(}\PY{p}{)}\PY{p}{)}\PY{p}{)} \PY{o}{\PYZhy{}} \PY{l+m+mi}{1}
+    \PY{k}{return} \PY{n}{result}\PY{p}{,} \PY{n}{max\PYZus{}result}
+\end{Verbatim}
+\end{tcolorbox}
+
+    \begin{tcolorbox}[breakable, size=fbox, boxrule=1pt, pad at break*=1mm,colback=cellbackground, colframe=cellborder]
+\prompt{In}{incolor}{43}{\boxspacing}
+\begin{Verbatim}[commandchars=\\\{\}]
+\PY{n}{feature1} \PY{o}{=} \PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{count\PYZus{}cat}\PY{l+s+s1}{\PYZsq{}}
+\PY{k}{for} \PY{n}{feature2} \PY{o+ow}{in} \PY{p}{(}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{hor\PYZus{}mass\PYZus{}center\PYZus{}cat}\PY{l+s+s1}{\PYZsq{}}\PY{p}{,} \PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{vert\PYZus{}symmetry\PYZus{}cat}\PY{l+s+s1}{\PYZsq{}}\PY{p}{)}\PY{p}{:}
+    \PY{k}{for} \PY{n}{confidence} \PY{o+ow}{in} \PY{p}{[}\PY{l+m+mf}{0.95}\PY{p}{,} \PY{l+m+mf}{0.99}\PY{p}{]}\PY{p}{:}
+        \PY{n}{min\PYZus{}N} \PY{o}{=} \PY{p}{(}\PY{n}{chi2}\PY{p}{(}\PY{n}{df}\PY{o}{=}\PY{l+m+mi}{2}\PY{p}{)}\PY{o}{.}\PY{n}{ppf}\PY{p}{(}\PY{n}{confidence}\PY{p}{)} \PY{o}{/} \PY{n}{chi\PYZus{}square}\PY{p}{(}\PY{n}{train}\PY{p}{,} \PY{n}{feature1}\PY{p}{,} \PY{n}{feature2}\PY{p}{)}\PY{p}{[}\PY{l+m+mi}{0}\PY{p}{]}\PY{p}{)}
+        \PY{n+nb}{print}\PY{p}{(}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+si}{\PYZob{}\PYZcb{}}\PY{l+s+s1}{ and }\PY{l+s+si}{\PYZob{}\PYZcb{}}\PY{l+s+s1}{ are associated with confidence }\PY{l+s+si}{\PYZob{}:.2f\PYZcb{}}\PY{l+s+se}{\PYZbs{}n}\PY{l+s+se}{\PYZbs{}t}\PY{l+s+s1}{when N \PYZgt{}= }\PY{l+s+si}{\PYZob{}:.1f\PYZcb{}}\PY{l+s+s1}{\PYZsq{}}\PY{o}{.}\PY{n}{format}\PY{p}{(}
+            \PY{n}{feature1}\PY{p}{,} \PY{n}{feature2}\PY{p}{,} \PY{n}{confidence}\PY{p}{,} \PY{n}{min\PYZus{}N}
+        \PY{p}{)}\PY{p}{)}
+\end{Verbatim}
+\end{tcolorbox}
+
+    \begin{Verbatim}[commandchars=\\\{\}]
+count\_cat and hor\_mass\_center\_cat are associated with confidence 0.95
+        when N >= 991.7
+count\_cat and hor\_mass\_center\_cat are associated with confidence 0.99
+        when N >= 1524.5
+count\_cat and vert\_symmetry\_cat are associated with confidence 0.95
+        when N >= 98.8
+count\_cat and vert\_symmetry\_cat are associated with confidence 0.99
+        when N >= 151.8
+    \end{Verbatim}
+
+    In our case we have \(1000\) of samples and we can conlude, that we have
+enough data to say that the vert\_symmetry depends on count of pixels
+with \(99\%\) confidence, and enough data to say that ho\_symmetry
+depends on count of pixels with \(95\%\) confidence (but not \(99\%\)
+confidence).

@@ -1,0 +1,70 @@
+\section*{Code}
+
+All code and data you can found in our repo \url{https://github.com/kventinel/hse-ml-project-mnist}
+
+\section*{Data}
+
+For our project we get \href{http://yann.lecun.com/exdb/mnist/}{MNIST} dataset, that consists from $60000$ images of digits from $0$ to $9$ in train and $10000$ in test. From this images we randomly choose $1000$ images in train and $1000$ images in test. For each image in original dataset presents $28 \times 28$ features in range from $0$ to $255$ -- value of each pixel of image.
+
+    \begin{center}
+    \adjustimage{max size={0.9\linewidth}{0.9\paperheight}}{report/mnist.png}
+    \end{center}
+
+
+We preprocess this image and get next features:
+\begin{itemize}
+            \item count -- count of nonzero pixels in image
+            \item mean -- average value of pixels in image
+            \item vert\_symmetry -- difference between mean of pixels in top half of image and bottom half of image
+            \item hor\_symmetry -- difference between mean of pixels in right half of image and bottom half of image
+            \item vert\_mass\_center -- weighted mean of pixels by this \href{https://en.wikipedia.org/wiki/Center_of_mass}{equation}, where wight of pixel -- it is index of row with this pixel
+            \item hor\_mass\_center -- weighted mean of pixels by this \href{https://en.wikipedia.org/wiki/Center_of_mass}{equation}, where wight of pixel -- it is index of column with this pixel
+\end{itemize}
+And 3 features received using filters \href{https://en.wikipedia.org/wiki/Viola–Jones_object_detection_framework}{Viola-Jones}:
+\begin{itemize}
+        \item vert\_viola -- difference between (mean of pixels in top 7 and bottom 7 rows) and (mean of pixels in center 14 rows)
+        \item hor\_viola -- difference between (mean of pixels in left 7 and right 7 columns) and (mean of pixels in center 14 columns)
+        \item all\_viola -- difference between (mean of pixels in top left quarter and right bottom quarter) and (mean of pixels in top right quarter and bottom left quarter)
+\end{itemize}
+
+We have got this dataset, because it's very common dataset for all machine learning courses and articles. And we were interesting to know more different facts about patterns in this dataset.
+
+\begin{tcolorbox}[breakable, size=fbox, boxrule=1pt, pad at break*=1mm,colback=cellbackground, colframe=cellborder]
+\prompt{In}{incolor}{2}{\boxspacing}
+\begin{Verbatim}[commandchars=\\\{\}]
+\PY{n}{train} \PY{o}{=} \PY{n}{pd}\PY{o}{.}\PY{n}{read\PYZus{}csv}\PY{p}{(}\PY{n}{constants}\PY{o}{.}\PY{n}{TRAIN}\PY{p}{)}
+\PY{n}{test} \PY{o}{=} \PY{n}{pd}\PY{o}{.}\PY{n}{read\PYZus{}csv}\PY{p}{(}\PY{n}{constants}\PY{o}{.}\PY{n}{TEST}\PY{p}{)}
+\end{Verbatim}
+\end{tcolorbox}
+
+    \begin{tcolorbox}[breakable, size=fbox, boxrule=1pt, pad at break*=1mm,colback=cellbackground, colframe=cellborder]
+\prompt{In}{incolor}{3}{\boxspacing}
+\begin{Verbatim}[commandchars=\\\{\}]
+\PY{n}{train}
+\end{Verbatim}
+\end{tcolorbox}
+
+            \begin{tcolorbox}[breakable, size=fbox, boxrule=.5pt, pad at break*=1mm, opacityfill=0]
+\prompt{Out}{outcolor}{3}{\boxspacing}
+\begin{Verbatim}[commandchars=\\\{\}]
+        mean    count  vert\_symmetry  hor\_symmetry          vert\_mass\_center  \textbackslash{}
+0  26.538265      122      10.081633    -18.117347              14.299144
+1  40.753827      155      -2.125000    -11.864796              13.984069
+2  41.187500      176       0.323980     -4.267857              14.086804
+3  38.184949      155      -2.043367     -2.477041              14.146140
+4  48.011480      204      -6.772959    -21.385204              13.838341
+
+         hor\_mass\_center  vert\_viola  hor\_viola  all\_viola  label
+0           14.299385   -32.581633  -42.862245   19.836735      7
+1           14.207067   -23.267857  -77.915816    0.829082      3
+2           13.838004   -35.079082  -76.956633  -24.625000      8
+3           13.564352   -48.140306  -76.369898  -13.706633      9
+4           14.332457   -21.022959  -74.385204  -24.446429      3
+
+[1000 rows x 12 columns]
+\end{Verbatim}
+
+\end{tcolorbox}
+
+
+
